@@ -1441,6 +1441,14 @@ void scan_ip4(register scan_t *scan) {
 	register ip4_t *ip4 = (ip4_t *) (scan->buf + scan->offset);
 	uint16_t tot_len = BIG_ENDIAN16(ip4->tot_len);
 	scan->length = ip4->ihl * 4;
+
+    // The length value is extracted from the IP packet can be 0 if there is TCP Segmentation. This will result
+    // in these packets not being parsed passed the IP header (not generating a proper representation of the packet)
+    // If IP header length is 0, take the actual physical length from the wire and subtract the offset.
+    if (tot_len == 0) {
+        tot_len = scan->wire_len - scan -> offset;
+    }
+
 	scan->hdr_payload = tot_len - scan->length;
 
 	if (is_accessible(scan, 8) == FALSE) {
@@ -1738,6 +1746,16 @@ int lookup_ethertype(uint16_t type) {
 	case 0x88a8: return IEEE_802DOT1Q_ID; // 802.1ad (QinQ) S-VLAN
 	case 0x9100: return IEEE_802DOT1Q_ID; // Old style 802.1ad (QinQ) S-VLAN
 	}
+	
+	// just in case the above check didn't work, also check big endian version of it
+    switch (BIG_ENDIAN16(type)) {
+        case 0x0800: return IP4_ID;
+        case 0x0806: return ARP_ID;
+        case 0x86DD: return IP6_ID;
+        case 0x8100: return IEEE_802DOT1Q_ID; // 802.1q (Vlan) C-VLAN
+        case 0x88a8: return IEEE_802DOT1Q_ID; // 802.1ad (QinQ) S-VLAN
+        case 0x9100: return IEEE_802DOT1Q_ID; // Old style 802.1ad (QinQ) S-VLAN
+    }
 
 	return PAYLOAD_ID;
 }

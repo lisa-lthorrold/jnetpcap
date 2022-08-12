@@ -427,6 +427,18 @@ typedef struct ip4 {
 	uint16_t check;
 	uint32_t saddr;
 	uint32_t daddr;
+    // Note if there are issues running this on windows - may need to uncomment below and comment above. This
+    // uint types have padding applied to it which may cause weird offsets when referencing memory locations in memory.
+
+//    unsigned int tos:8;
+//    unsigned int tot_len:16; //works
+//    unsigned int id:16;
+//    unsigned int frag_off:16;
+//    unsigned int ttl:8;
+//    unsigned int protocol:8;
+//    unsigned int check:16;
+//    unsigned int saddr:32;
+//    unsigned int daddr:32;
 	/*The options start here. */
 } ip4_t;
 
